@@ -40,9 +40,11 @@ This project is a TypeScript-based application that interacts with the Solana bl
 
 1. **Airdrop & Wallet Management**: The `airdrop.ts` script generates a keypair, saves it to a JSON file, and airdrops 2 SOL to the wallet on the Solana Devnet.
 
-2. **Transaction Tracking**: The `transaction.ts` script listens for changes to a specified account using WebSockets. When a change is detected, it fetches the latest transaction details and sends an email notification with the information.
+2. **Transaction Tracking**: The `app.ts` script listens for changes to a specified account using WebSockets. When a change is detected, it fetches the latest transaction details and sends an email notification with the information.
 
 3. **Email Notifications**: The Nodemailer library is used to send emails with transaction details, making sure you stay updated on all account activities.
+
+4. **Make Transaction**: The `transaction.ts` script makes a transaction of 0.01 SOL to your desired wallet
 
 ## Contribution
 
