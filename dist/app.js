@@ -14,7 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const web3_js_1 = require("@solana/web3.js");
 require("dotenv/config");
-const sendMail_1 = __importDefault(require("./sendMail"));
+const sendMail_1 = __importDefault(require("./mail/sendMail"));
 function latestTransaction(connection, publicKey) {
     return __awaiter(this, void 0, void 0, function* () {
         const signatures = yield connection.getSignaturesForAddress(publicKey, {
@@ -43,6 +43,7 @@ function latestTransaction(connection, publicKey) {
     <p>Best regards,<br>Your Blockchain Police</p>
   `;
         const email = "tanishmajumdar2912@gmail.com";
+        // @ts-ignore
         (0, sendMail_1.default)(email, htmlContent);
     });
 }
