@@ -21,7 +21,7 @@ async function main() {
   const payer = Keypair.fromSecretKey(secretKey);
 
   const recipientPublicKey = new PublicKey(
-    "GVYmpv4BCSVj1ffYxYMCYGjjahepcWo4o7rUDC4ipPKD"
+    "4VL4MT7DMGywm4x8TwzhFyL91MyiYMZnKcALSNyrynsV"
   );
 
   const minRent = await connection.getMinimumBalanceForRentExemption(0);

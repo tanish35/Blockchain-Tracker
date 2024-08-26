@@ -16,13 +16,22 @@ const getWallets = asyncHandler(async (req: Request, res: Response) => {
 
 const addWallet = asyncHandler(async (req: Request, res: Response) => {
     const { walletId } = req.body;
-    const wallet = await prisma.wallet.create({
-        data: {
-            wallet_id: walletId,
-        },
+    if(!walletId){
+        res.status(400).json({message:"Wallet ID is required."});
+        return;
+    }
+    const wallet = await prisma.wallet.findUnique({
+        where: { wallet_id: walletId },
     });
-    // @ts-ignore
-    await updateMonitoring(req, res);
+    if(!wallet){
+        await prisma.wallet.create({
+            data: { wallet_id: walletId },
+        });
+        // @ts-ignore
+        updateMonitoring(req, res);
+        return;
+    }
+    res.json({ message: "Wallet added successfully." });
 });
 
 const updateMonitoring = asyncHandler(async (req: Request, res: Response) => {
@@ -94,6 +103,8 @@ const latestTransaction = async (connection: Connection, publicKey: PublicKey) =
     const email = "tanishmajumdar2912@gmail.com";
     // @ts-ignore
     sendMail(email, htmlContent);
+    // @ts-ignore
+    addWallet({ body: { walletId: transactionDetails.destination } }, { json: () => {} });
   } catch (error) {
     console.error("Error processing transaction:", error);
   }

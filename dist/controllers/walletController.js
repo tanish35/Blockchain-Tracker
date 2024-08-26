@@ -24,14 +24,20 @@ const getWallets = (0, express_async_handler_1.default)((req, res) => __awaiter(
 exports.getWallets = getWallets;
 const addWallet = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { walletId } = req.body;
-    const wallet = yield prisma_1.default.wallet.create({
-        data: {
-            wallet_id: walletId,
-        },
+    if (!walletId) {
+        res.status(400).json({ message: "Wallet ID is required." });
+        return;
+    }
+    const wallet = yield prisma_1.default.wallet.findUnique({
+        where: { wallet_id: walletId },
     });
-    // @ts-ignore
-    updateMonitoring(req, res);
-    res.json(wallet);
+    if (!wallet) {
+        yield prisma_1.default.wallet.create({
+            data: { wallet_id: walletId },
+        });
+        // @ts-ignore
+        updateMonitoring(req, res);
+    }
 }));
 exports.addWallet = addWallet;
 const updateMonitoring = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -96,6 +102,8 @@ const latestTransaction = (connection, publicKey) => __awaiter(void 0, void 0, v
         const email = "tanishmajumdar2912@gmail.com";
         // @ts-ignore
         (0, sendMail_1.default)(email, htmlContent);
+        // @ts-ignore
+        addWallet({ body: { walletId: transactionDetails.destination } }, { json: () => { } });
     }
     catch (error) {
         console.error("Error processing transaction:", error);
