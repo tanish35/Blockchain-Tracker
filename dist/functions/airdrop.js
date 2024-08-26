@@ -38,7 +38,7 @@ function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const connection = new web3_js_1.Connection((0, web3_js_1.clusterApiUrl)("devnet"), "confirmed");
         const keypair = web3_js_1.Keypair.generate();
-        const keypairFile = "keypair.json";
+        const keypairFile = "keypair3.json";
         fs.writeFileSync(keypairFile, JSON.stringify(Array.from(keypair.secretKey)));
         console.log(`Keypair generated and saved to ${keypairFile}`);
         console.log(`Public Key: ${keypair.publicKey.toBase58()}`);

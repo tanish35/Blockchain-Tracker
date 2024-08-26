@@ -17,6 +17,7 @@ const express_async_handler_1 = __importDefault(require("express-async-handler")
 const prisma_1 = __importDefault(require("../lib/prisma"));
 const sendMail_1 = __importDefault(require("../mail/sendMail"));
 const web3_js_1 = require("@solana/web3.js");
+const activeConnections = new Map();
 const getWallets = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const wallets = yield prisma_1.default.wallet.findMany();
     res.json(wallets);
@@ -37,7 +38,9 @@ const addWallet = (0, express_async_handler_1.default)((req, res) => __awaiter(v
         });
         // @ts-ignore
         updateMonitoring(req, res);
+        return;
     }
+    res.json({ message: "Wallet added successfully." });
 }));
 exports.addWallet = addWallet;
 const updateMonitoring = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -49,12 +52,16 @@ const updateMonitoring = (0, express_async_handler_1.default)((req, res) => __aw
             return;
         }
         wallets.forEach((wallet) => {
-            const publicKey = new web3_js_1.PublicKey(wallet.wallet_id);
-            connection.onAccountChange(publicKey, (accountInfo) => {
-                console.log("Account data changed:", accountInfo.data);
-                latestTransaction(connection, publicKey);
-            });
-            console.log("Listening for changes to account:", publicKey.toBase58());
+            const publicKeyStr = wallet.wallet_id;
+            if (!activeConnections.has(publicKeyStr)) {
+                const publicKey = new web3_js_1.PublicKey(publicKeyStr);
+                connection.onAccountChange(publicKey, (accountInfo) => {
+                    console.log("Account data changed:", accountInfo.data);
+                    latestTransaction(connection, publicKey);
+                });
+                activeConnections.set(publicKeyStr, true);
+                console.log("Listening for changes to account:", publicKey.toBase58());
+            }
         });
         res.json({ message: "Monitoring started for all wallets." });
     }
@@ -83,8 +90,9 @@ const latestTransaction = (connection, publicKey) => __awaiter(void 0, void 0, v
             console.log("Transaction not found.");
             return;
         }
+        const transactionDetails = 
         // @ts-ignore
-        const transactionDetails = (_c = (_b = transaction.transaction.message.instructions[0]) === null || _b === void 0 ? void 0 : _b.parsed) === null || _c === void 0 ? void 0 : _c.info;
+        (_c = (_b = transaction.transaction.message.instructions[0]) === null || _b === void 0 ? void 0 : _b.parsed) === null || _c === void 0 ? void 0 : _c.info;
         if (!transactionDetails) {
             console.log("Transaction details are missing.");
             return;

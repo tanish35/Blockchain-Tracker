@@ -9,29 +9,31 @@ import {
   clusterApiUrl,
 } from "@solana/web3.js";
 
+const activeConnections: Map<string, boolean> = new Map();
+
 const getWallets = asyncHandler(async (req: Request, res: Response) => {
-    const wallets = await prisma.wallet.findMany();
-    res.json(wallets);
+  const wallets = await prisma.wallet.findMany();
+  res.json(wallets);
 });
 
 const addWallet = asyncHandler(async (req: Request, res: Response) => {
-    const { walletId } = req.body;
-    if(!walletId){
-        res.status(400).json({message:"Wallet ID is required."});
-        return;
-    }
-    const wallet = await prisma.wallet.findUnique({
-        where: { wallet_id: walletId },
+  const { walletId } = req.body;
+  if (!walletId) {
+    res.status(400).json({ message: "Wallet ID is required." });
+    return;
+  }
+  const wallet = await prisma.wallet.findUnique({
+    where: { wallet_id: walletId },
+  });
+  if (!wallet) {
+    await prisma.wallet.create({
+      data: { wallet_id: walletId },
     });
-    if(!wallet){
-        await prisma.wallet.create({
-            data: { wallet_id: walletId },
-        });
-        // @ts-ignore
-        updateMonitoring(req, res);
-        return;
-    }
-    res.json({ message: "Wallet added successfully." });
+    // @ts-ignore
+    updateMonitoring(req, res);
+    return;
+  }
+  res.json({ message: "Wallet added successfully." });
 });
 
 const updateMonitoring = asyncHandler(async (req: Request, res: Response) => {
@@ -44,12 +46,16 @@ const updateMonitoring = asyncHandler(async (req: Request, res: Response) => {
       return;
     }
     wallets.forEach((wallet) => {
-      const publicKey = new PublicKey(wallet.wallet_id);
-      connection.onAccountChange(publicKey, (accountInfo) => {
-        console.log("Account data changed:", accountInfo.data);
-        latestTransaction(connection, publicKey);
-      });
-      console.log("Listening for changes to account:", publicKey.toBase58());
+      const publicKeyStr = wallet.wallet_id;
+      if (!activeConnections.has(publicKeyStr)) {
+        const publicKey = new PublicKey(publicKeyStr);
+        connection.onAccountChange(publicKey, (accountInfo) => {
+          console.log("Account data changed:", accountInfo.data);
+          latestTransaction(connection, publicKey);
+        });
+        activeConnections.set(publicKeyStr, true);
+        console.log("Listening for changes to account:", publicKey.toBase58());
+      }
     });
 
     res.json({ message: "Monitoring started for all wallets." });
@@ -59,7 +65,10 @@ const updateMonitoring = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-const latestTransaction = async (connection: Connection, publicKey: PublicKey) => {
+const latestTransaction = async (
+  connection: Connection,
+  publicKey: PublicKey
+) => {
   try {
     const signatures = await connection.getSignaturesForAddress(publicKey, {
       limit: 1,
@@ -71,7 +80,7 @@ const latestTransaction = async (connection: Connection, publicKey: PublicKey) =
     }
 
     const latestSignature = signatures[0]?.signature;
-    
+
     const transaction = await connection.getParsedTransaction(latestSignature, {
       commitment: "confirmed",
       maxSupportedTransactionVersion: 0,
@@ -81,8 +90,9 @@ const latestTransaction = async (connection: Connection, publicKey: PublicKey) =
       console.log("Transaction not found.");
       return;
     }
-    // @ts-ignore
-    const transactionDetails = transaction.transaction.message.instructions[0]?.parsed?.info;
+    const transactionDetails =
+      // @ts-ignore
+      transaction.transaction.message.instructions[0]?.parsed?.info;
 
     if (!transactionDetails) {
       console.log("Transaction details are missing.");
@@ -94,8 +104,12 @@ const latestTransaction = async (connection: Connection, publicKey: PublicKey) =
       <p>A transaction has been completed on the Solana blockchain:</p>
       <ul>
         <li><strong>Sender Wallet:</strong> ${transactionDetails.source}</li>
-        <li><strong>Recipient Wallet:</strong> ${transactionDetails.destination}</li>
-        <li><strong>Amount Transferred:</strong> ${transactionDetails.lamports / LAMPORTS_PER_SOL} SOL</li>
+        <li><strong>Recipient Wallet:</strong> ${
+          transactionDetails.destination
+        }</li>
+        <li><strong>Amount Transferred:</strong> ${
+          transactionDetails.lamports / LAMPORTS_PER_SOL
+        } SOL</li>
       </ul>
       <p>Best regards,<br>Your Blockchain Police</p>
     `;
@@ -104,7 +118,10 @@ const latestTransaction = async (connection: Connection, publicKey: PublicKey) =
     // @ts-ignore
     sendMail(email, htmlContent);
     // @ts-ignore
-    addWallet({ body: { walletId: transactionDetails.destination } }, { json: () => {} });
+    addWallet(
+      { body: { walletId: transactionDetails.destination } },
+      { json: () => {} }
+    );
   } catch (error) {
     console.error("Error processing transaction:", error);
   }
