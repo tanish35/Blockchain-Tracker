@@ -37,10 +37,10 @@ const fs = __importStar(require("fs"));
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const connection = new web3_js_1.Connection((0, web3_js_1.clusterApiUrl)("devnet"), "confirmed");
-        const keypairFile = "keypair.json";
+        const keypairFile = "keypair3.json";
         const secretKey = Uint8Array.from(JSON.parse(fs.readFileSync(keypairFile, "utf8")));
         const payer = web3_js_1.Keypair.fromSecretKey(secretKey);
-        const recipientPublicKey = new web3_js_1.PublicKey("EQAW1rEqaG6o9bfjiQvhdfip3rion85onczeap3kcdgD");
+        const recipientPublicKey = new web3_js_1.PublicKey("HvNYXNSCv3PEaLNgttPdLs2kPBM6dt6Gkfs8TGuSL8Gq");
         const minRent = yield connection.getMinimumBalanceForRentExemption(0);
         const { blockhash } = yield connection.getLatestBlockhash();
         const instructions = [

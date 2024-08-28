@@ -10,5 +10,6 @@ router.get("/", walletController_1.getWallets);
 router.post("/add", walletController_1.addWallet);
 router.post("/monitor", walletController_1.updateMonitoring);
 router.post("/transactions", walletController_1.getWalletTransactions);
+router.get("/delete", walletController_1.deleteAllTransactions);
 // router.get("/graph", drawGraph);
 exports.default = router;

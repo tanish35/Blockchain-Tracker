@@ -65,14 +65,49 @@ const getWalletTransactions = asyncHandler(
       );
       res.json(transactions);
     }
-    const transactions = await prisma.transaction.findMany({
-      where: {
-        OR: [{ wallet_id: walletId }, { destination_id: walletId }],
-      },
-    });
+    const processedWallets = new Set<string>();
+    const transactions = await recursiveDatabaseQuery(
+      walletId,
+      processedWallets,
+      0
+    );
     res.json(transactions);
   }
 );
+
+const recursiveDatabaseQuery = async (
+  walletId: string,
+  processedWallets: Set<string>,
+  level: number
+) => {
+  if (level > 8 || processedWallets.has(walletId)) return []; // Base case and prevention of duplicate processing
+
+  processedWallets.add(walletId);
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      OR: [{ wallet_id: walletId }, { destination_id: walletId }],
+    },
+  });
+
+  let allTransactions = [...transactions];
+
+  for (const transaction of transactions) {
+    const nextWalletId =
+      transaction.wallet_id === walletId
+        ? transaction.destination_id
+        : transaction.wallet_id;
+
+    const nextTransactions = await recursiveDatabaseQuery(
+      nextWalletId,
+      processedWallets,
+      level + 1
+    );
+    allTransactions = [...allTransactions, ...nextTransactions];
+  }
+
+  return allTransactions;
+};
 
 const addWallet = asyncHandler(async (req: Request, res: Response) => {
   const { walletId, email } = req.body;
@@ -193,6 +228,17 @@ const latestTransaction = async (
   }
 };
 
-const drawGraph = asyncHandler(async (req: Request, res: Response) => {});
+const deleteAllTransactions = asyncHandler(
+  async (req: Request, res: Response) => {
+    await prisma.transaction.deleteMany();
+    res.json({ message: "All transactions deleted." });
+  }
+);
 
-export { getWallets, addWallet, updateMonitoring, getWalletTransactions };
+export {
+  getWallets,
+  addWallet,
+  updateMonitoring,
+  getWalletTransactions,
+  deleteAllTransactions,
+};

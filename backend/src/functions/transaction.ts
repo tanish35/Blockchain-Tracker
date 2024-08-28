@@ -14,14 +14,14 @@ import * as fs from "fs";
 async function main() {
   const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
 
-  const keypairFile = "keypair.json";
+  const keypairFile = "keypair3.json";
   const secretKey = Uint8Array.from(
     JSON.parse(fs.readFileSync(keypairFile, "utf8"))
   );
   const payer = Keypair.fromSecretKey(secretKey);
 
   const recipientPublicKey = new PublicKey(
-    "EQAW1rEqaG6o9bfjiQvhdfip3rion85onczeap3kcdgD"
+    "HvNYXNSCv3PEaLNgttPdLs2kPBM6dt6Gkfs8TGuSL8Gq"
   );
 
   const minRent = await connection.getMinimumBalanceForRentExemption(0);

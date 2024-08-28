@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getWalletTransactions = exports.updateMonitoring = exports.addWallet = exports.getWallets = void 0;
+exports.deleteAllTransactions = exports.getWalletTransactions = exports.updateMonitoring = exports.addWallet = exports.getWallets = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const prisma_1 = __importDefault(require("../lib/prisma"));
 const sendMail_1 = __importDefault(require("../mail/sendMail"));
@@ -66,12 +66,40 @@ const getWalletTransactions = (0, express_async_handler_1.default)((req, res) =>
         })));
         res.json(transactions);
     }
-    const transactions = yield prisma_1.default.transaction.findMany({
-        where: { wallet_id: walletId },
-    });
+    const processedWallets = new Set();
+    const transactions = yield fetchAllRelatedTransactions(walletId);
     res.json(transactions);
 }));
 exports.getWalletTransactions = getWalletTransactions;
+const fetchAllRelatedTransactions = (walletId) => __awaiter(void 0, void 0, void 0, function* () {
+    const processedWallets = new Set();
+    const walletsToProcess = [walletId];
+    let allTransactions = [];
+    while (walletsToProcess.length > 0) {
+        const currentWalletId = walletsToProcess.pop();
+        if (!currentWalletId || processedWallets.has(currentWalletId))
+            continue;
+        processedWallets.add(currentWalletId);
+        const transactions = yield prisma_1.default.transaction.findMany({
+            where: {
+                OR: [
+                    { wallet_id: currentWalletId },
+                    { destination_id: currentWalletId },
+                ],
+            },
+        });
+        allTransactions.push(...transactions);
+        for (const transaction of transactions) {
+            const nextWalletId = transaction.wallet_id === currentWalletId
+                ? transaction.destination_id
+                : transaction.wallet_id;
+            if (!processedWallets.has(nextWalletId)) {
+                walletsToProcess.push(nextWalletId);
+            }
+        }
+    }
+    return allTransactions;
+});
 const addWallet = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { walletId, email } = req.body;
     if (!walletId) {
@@ -174,4 +202,8 @@ const latestTransaction = (connection, publicKey) => __awaiter(void 0, void 0, v
         console.error("Error processing transaction:", error);
     }
 });
-const drawGraph = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () { }));
+const deleteAllTransactions = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield prisma_1.default.transaction.deleteMany();
+    res.json({ message: "All transactions deleted." });
+}));
+exports.deleteAllTransactions = deleteAllTransactions;
