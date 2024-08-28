@@ -1,35 +1,72 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState, useRef } from "react";
+//@ts-ignore
+import Dracula from "graphdracula"; // Assuming this is correctly installed and imported
+import axios from "axios";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+// Define the type for a transaction
+interface Transaction {
+  wallet_id: string;
+  destination_id: string;
+  amount: number;
 }
 
-export default App
+function App() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const paperRef = useRef(null);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const { data } = await axios.post<Transaction[]>(
+          "/api/wallet/transactions",
+          {
+            walletId: "8LJGeKh1eHbPgToEc8m5pjuBTCAyVRFv3yVFDxTWo5PE",
+          }
+        );
+        setTransactions(data);
+
+        const Graph = Dracula.Graph;
+        const Renderer = Dracula.Renderer.Raphael;
+        const Layout = Dracula.Layout.Spring;
+
+        const graph = new Graph();
+
+        data.forEach((transaction) => {
+          graph.addEdge(transaction.wallet_id, transaction.destination_id, {
+            directed: true,
+            label: `${transaction.amount} SOL`,
+          });
+        });
+
+        const layout = new Layout(graph);
+
+        // Render the graph
+        if (paperRef.current) {
+          const renderer = new Renderer(paperRef.current, graph, 400, 300);
+          renderer.draw();
+        }
+      } catch (error) {
+        console.error("Failed to fetch transactions", error);
+      }
+    };
+    fetchTransactions();
+  }, []);
+
+  return (
+    <div>
+      <h1>Transactions</h1>
+      {/* <ul>
+        {transactions.map((transaction, index) => (
+          <li key={index}>
+            {transaction.wallet_id} sent {transaction.amount} SOL to{" "}
+            {transaction.destination_id}
+          </li>
+        ))}
+      </ul> */}
+      <div ref={paperRef} style={{ width: "400px", height: "300px" }}></div>
+    </div>
+  );
+}
+
+export default App;

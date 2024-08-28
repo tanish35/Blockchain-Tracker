@@ -25,30 +25,50 @@ const getWallets = (0, express_async_handler_1.default)((req, res) => __awaiter(
 exports.getWallets = getWallets;
 const getWalletTransactions = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { walletId } = req.body;
-    const connection = new web3_js_1.Connection((0, web3_js_1.clusterApiUrl)("devnet"), "confirmed");
-    const publicKey = new web3_js_1.PublicKey(walletId);
-    const signatures = yield connection.getSignaturesForAddress(publicKey, {
-        limit: 100,
+    const walletExists = yield prisma_1.default.wallet.findUnique({
+        where: { wallet_id: walletId },
     });
-    if (signatures.length === 0) {
-        console.log("No transactions found.");
-        return;
-    }
-    const transactions = yield Promise.all(signatures.map((signature) => __awaiter(void 0, void 0, void 0, function* () {
-        var _a, _b;
-        const transaction = yield connection.getParsedTransaction(signature.signature, {
-            commitment: "confirmed",
-            maxSupportedTransactionVersion: 0,
+    if (!walletExists) {
+        yield prisma_1.default.wallet.create({
+            data: { wallet_id: walletId, email: "" },
         });
-        const transactionDetails = 
-        // @ts-ignore
-        (_b = (_a = transaction.transaction.message.instructions[0]) === null || _a === void 0 ? void 0 : _a.parsed) === null || _b === void 0 ? void 0 : _b.info;
-        return {
-            wallet_id: transactionDetails.source,
-            destination_id: transactionDetails.destination,
-            amount: transactionDetails.lamports / web3_js_1.LAMPORTS_PER_SOL,
-        };
-    })));
+        const connection = new web3_js_1.Connection((0, web3_js_1.clusterApiUrl)("devnet"), "confirmed");
+        const publicKey = new web3_js_1.PublicKey(walletId);
+        const signatures = yield connection.getSignaturesForAddress(publicKey, {
+            limit: 100,
+        });
+        if (signatures.length === 0) {
+            console.log("No transactions found.");
+            return;
+        }
+        const transactions = yield Promise.all(signatures.map((signature) => __awaiter(void 0, void 0, void 0, function* () {
+            var _a, _b;
+            const transaction = yield connection.getParsedTransaction(signature.signature, {
+                commitment: "confirmed",
+                maxSupportedTransactionVersion: 0,
+            });
+            const transactionDetails = 
+            // @ts-ignore
+            (_b = (_a = transaction.transaction.message.instructions[0]) === null || _a === void 0 ? void 0 : _a.parsed) === null || _b === void 0 ? void 0 : _b.info;
+            yield prisma_1.default.transaction.create({
+                data: {
+                    transaction_id: signature.signature,
+                    wallet_id: transactionDetails.source,
+                    destination_id: transactionDetails.destination,
+                    amount: transactionDetails.lamports / web3_js_1.LAMPORTS_PER_SOL,
+                },
+            });
+            return {
+                wallet_id: transactionDetails.source,
+                destination_id: transactionDetails.destination,
+                amount: transactionDetails.lamports / web3_js_1.LAMPORTS_PER_SOL,
+            };
+        })));
+        res.json(transactions);
+    }
+    const transactions = yield prisma_1.default.transaction.findMany({
+        where: { wallet_id: walletId },
+    });
     res.json(transactions);
 }));
 exports.getWalletTransactions = getWalletTransactions;
