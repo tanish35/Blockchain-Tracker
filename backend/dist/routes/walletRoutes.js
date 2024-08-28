@@ -9,4 +9,6 @@ const router = express_1.default.Router();
 router.get("/", walletController_1.getWallets);
 router.post("/add", walletController_1.addWallet);
 router.post("/monitor", walletController_1.updateMonitoring);
+router.post("/transactions", walletController_1.getWalletTransactions);
+// router.get("/graph", drawGraph);
 exports.default = router;

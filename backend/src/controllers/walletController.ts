@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import prisma from "../lib/prisma";
 import sendMail from "../mail/sendMail";
+
 import {
   Connection,
   LAMPORTS_PER_SOL,
@@ -16,8 +17,43 @@ const getWallets = asyncHandler(async (req: Request, res: Response) => {
   res.json(wallets);
 });
 
+const getWalletTransactions = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { walletId } = req.body;
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+    const publicKey = new PublicKey(walletId);
+    const signatures = await connection.getSignaturesForAddress(publicKey, {
+      limit: 100,
+    });
+    if (signatures.length === 0) {
+      console.log("No transactions found.");
+      return;
+    }
+    const transactions = await Promise.all(
+      signatures.map(async (signature) => {
+        const transaction = await connection.getParsedTransaction(
+          signature.signature,
+          {
+            commitment: "confirmed",
+            maxSupportedTransactionVersion: 0,
+          }
+        );
+        const transactionDetails =
+          // @ts-ignore
+          transaction.transaction.message.instructions[0]?.parsed?.info;
+        return {
+          wallet_id: transactionDetails.source,
+          destination_id: transactionDetails.destination,
+          amount: transactionDetails.lamports / LAMPORTS_PER_SOL,
+        };
+      })
+    );
+    res.json(transactions);
+  }
+);
+
 const addWallet = asyncHandler(async (req: Request, res: Response) => {
-  const { walletId } = req.body;
+  const { walletId, email } = req.body;
   if (!walletId) {
     res.status(400).json({ message: "Wallet ID is required." });
     return;
@@ -27,7 +63,7 @@ const addWallet = asyncHandler(async (req: Request, res: Response) => {
   });
   if (!wallet) {
     await prisma.wallet.create({
-      data: { wallet_id: walletId },
+      data: { wallet_id: walletId, email },
     });
     // @ts-ignore
     updateMonitoring(req, res);
@@ -117,6 +153,14 @@ const latestTransaction = async (
     const email = "tanishmajumdar2912@gmail.com";
     // @ts-ignore
     sendMail(email, htmlContent);
+    await prisma.transaction.create({
+      data: {
+        transaction_id: latestSignature,
+        wallet_id: transactionDetails.source,
+        destination_id: transactionDetails.destination,
+        amount: transactionDetails.lamports / LAMPORTS_PER_SOL,
+      },
+    });
     // @ts-ignore
     addWallet(
       { body: { walletId: transactionDetails.destination } },
@@ -127,4 +171,6 @@ const latestTransaction = async (
   }
 };
 
-export { getWallets, addWallet, updateMonitoring };
+const drawGraph = asyncHandler(async (req: Request, res: Response) => {});
+
+export { getWallets, addWallet, updateMonitoring, getWalletTransactions };

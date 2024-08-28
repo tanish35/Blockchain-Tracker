@@ -40,7 +40,7 @@ function main() {
         const keypairFile = "keypair.json";
         const secretKey = Uint8Array.from(JSON.parse(fs.readFileSync(keypairFile, "utf8")));
         const payer = web3_js_1.Keypair.fromSecretKey(secretKey);
-        const recipientPublicKey = new web3_js_1.PublicKey("4VL4MT7DMGywm4x8TwzhFyL91MyiYMZnKcALSNyrynsV");
+        const recipientPublicKey = new web3_js_1.PublicKey("EQAW1rEqaG6o9bfjiQvhdfip3rion85onczeap3kcdgD");
         const minRent = yield connection.getMinimumBalanceForRentExemption(0);
         const { blockhash } = yield connection.getLatestBlockhash();
         const instructions = [

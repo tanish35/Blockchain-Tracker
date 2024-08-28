@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateMonitoring = exports.addWallet = exports.getWallets = void 0;
+exports.getWalletTransactions = exports.updateMonitoring = exports.addWallet = exports.getWallets = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const prisma_1 = __importDefault(require("../lib/prisma"));
 const sendMail_1 = __importDefault(require("../mail/sendMail"));
@@ -23,8 +23,37 @@ const getWallets = (0, express_async_handler_1.default)((req, res) => __awaiter(
     res.json(wallets);
 }));
 exports.getWallets = getWallets;
-const addWallet = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getWalletTransactions = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { walletId } = req.body;
+    const connection = new web3_js_1.Connection((0, web3_js_1.clusterApiUrl)("devnet"), "confirmed");
+    const publicKey = new web3_js_1.PublicKey(walletId);
+    const signatures = yield connection.getSignaturesForAddress(publicKey, {
+        limit: 100,
+    });
+    if (signatures.length === 0) {
+        console.log("No transactions found.");
+        return;
+    }
+    const transactions = yield Promise.all(signatures.map((signature) => __awaiter(void 0, void 0, void 0, function* () {
+        var _a, _b;
+        const transaction = yield connection.getParsedTransaction(signature.signature, {
+            commitment: "confirmed",
+            maxSupportedTransactionVersion: 0,
+        });
+        const transactionDetails = 
+        // @ts-ignore
+        (_b = (_a = transaction.transaction.message.instructions[0]) === null || _a === void 0 ? void 0 : _a.parsed) === null || _b === void 0 ? void 0 : _b.info;
+        return {
+            wallet_id: transactionDetails.source,
+            destination_id: transactionDetails.destination,
+            amount: transactionDetails.lamports / web3_js_1.LAMPORTS_PER_SOL,
+        };
+    })));
+    res.json(transactions);
+}));
+exports.getWalletTransactions = getWalletTransactions;
+const addWallet = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { walletId, email } = req.body;
     if (!walletId) {
         res.status(400).json({ message: "Wallet ID is required." });
         return;
@@ -34,7 +63,7 @@ const addWallet = (0, express_async_handler_1.default)((req, res) => __awaiter(v
     });
     if (!wallet) {
         yield prisma_1.default.wallet.create({
-            data: { wallet_id: walletId },
+            data: { wallet_id: walletId, email },
         });
         // @ts-ignore
         updateMonitoring(req, res);
@@ -110,6 +139,14 @@ const latestTransaction = (connection, publicKey) => __awaiter(void 0, void 0, v
         const email = "tanishmajumdar2912@gmail.com";
         // @ts-ignore
         (0, sendMail_1.default)(email, htmlContent);
+        yield prisma_1.default.transaction.create({
+            data: {
+                transaction_id: latestSignature,
+                wallet_id: transactionDetails.source,
+                destination_id: transactionDetails.destination,
+                amount: transactionDetails.lamports / web3_js_1.LAMPORTS_PER_SOL,
+            },
+        });
         // @ts-ignore
         addWallet({ body: { walletId: transactionDetails.destination } }, { json: () => { } });
     }
@@ -117,3 +154,4 @@ const latestTransaction = (connection, publicKey) => __awaiter(void 0, void 0, v
         console.error("Error processing transaction:", error);
     }
 });
+const drawGraph = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () { }));

@@ -1,0 +1,34 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Transaction {
+  id             String   @id @default(cuid()) @map("_id")
+  transaction_id String   @unique
+  wallet_id      String
+  destination_id String
+  amount         Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  Wallet         Wallet   @relation(fields: [wallet_id], references: [wallet_id])
+}
+
+model Wallet {
+  id          String        @id @default(cuid()) @map("_id")
+  wallet_id   String        @unique
+  email       String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Transaction Transaction[]
+}
