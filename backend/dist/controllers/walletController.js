@@ -67,36 +67,26 @@ const getWalletTransactions = (0, express_async_handler_1.default)((req, res) =>
         res.json(transactions);
     }
     const processedWallets = new Set();
-    const transactions = yield fetchAllRelatedTransactions(walletId);
+    const transactions = yield recursiveDatabaseQuery(walletId, processedWallets, 0);
     res.json(transactions);
 }));
 exports.getWalletTransactions = getWalletTransactions;
-const fetchAllRelatedTransactions = (walletId) => __awaiter(void 0, void 0, void 0, function* () {
-    const processedWallets = new Set();
-    const walletsToProcess = [walletId];
-    let allTransactions = [];
-    while (walletsToProcess.length > 0) {
-        const currentWalletId = walletsToProcess.pop();
-        if (!currentWalletId || processedWallets.has(currentWalletId))
-            continue;
-        processedWallets.add(currentWalletId);
-        const transactions = yield prisma_1.default.transaction.findMany({
-            where: {
-                OR: [
-                    { wallet_id: currentWalletId },
-                    { destination_id: currentWalletId },
-                ],
-            },
-        });
-        allTransactions.push(...transactions);
-        for (const transaction of transactions) {
-            const nextWalletId = transaction.wallet_id === currentWalletId
-                ? transaction.destination_id
-                : transaction.wallet_id;
-            if (!processedWallets.has(nextWalletId)) {
-                walletsToProcess.push(nextWalletId);
-            }
-        }
+const recursiveDatabaseQuery = (walletId, processedWallets, level) => __awaiter(void 0, void 0, void 0, function* () {
+    if (level > 8 || processedWallets.has(walletId))
+        return []; // Base case and prevention of duplicate processing
+    processedWallets.add(walletId);
+    const transactions = yield prisma_1.default.transaction.findMany({
+        where: {
+            OR: [{ wallet_id: walletId }, { destination_id: walletId }],
+        },
+    });
+    let allTransactions = [...transactions];
+    for (const transaction of transactions) {
+        const nextWalletId = transaction.wallet_id === walletId
+            ? transaction.destination_id
+            : transaction.wallet_id;
+        const nextTransactions = yield recursiveDatabaseQuery(nextWalletId, processedWallets, level + 1);
+        allTransactions = [...allTransactions, ...nextTransactions];
     }
     return allTransactions;
 });

@@ -1,10 +1,15 @@
-import { useEffect, useState, useRef } from "react";
-//@ts-ignore
-import Dracula from "graphdracula"; // Assuming this is correctly installed and imported
+import { useEffect, useState } from "react";
 import axios from "axios";
+import ReactFlow, {
+  MiniMap,
+  Controls,
+  Background,
+  Node,
+  Edge,
+} from "reactflow";
+import "reactflow/dist/style.css";
 import "./App.css";
 
-// Define the type for a transaction
 interface Transaction {
   wallet_id: string;
   destination_id: string;
@@ -13,7 +18,8 @@ interface Transaction {
 
 function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const paperRef = useRef(null);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -25,27 +31,44 @@ function App() {
           }
         );
         setTransactions(data);
+        const nodesSet = new Set<string>();
+        const newNodes: Node[] = [];
+        const newEdges: Edge[] = [];
 
-        const Graph = Dracula.Graph;
-        const Renderer = Dracula.Renderer.Raphael;
-        const Layout = Dracula.Layout.Spring;
-
-        const graph = new Graph();
-
-        data.forEach((transaction) => {
-          graph.addEdge(transaction.wallet_id, transaction.destination_id, {
-            directed: true,
+        data.forEach((transaction, index) => {
+          if (!nodesSet.has(transaction.wallet_id)) {
+            nodesSet.add(transaction.wallet_id);
+            newNodes.push({
+              id: transaction.wallet_id,
+              data: { label: transaction.wallet_id },
+              position: {
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+              },
+            });
+          }
+          if (!nodesSet.has(transaction.destination_id)) {
+            nodesSet.add(transaction.destination_id);
+            newNodes.push({
+              id: transaction.destination_id,
+              data: { label: transaction.destination_id },
+              position: {
+                x: Math.random() * window.innerWidth,
+                y: Math.random() * window.innerHeight,
+              },
+            });
+          }
+          newEdges.push({
+            id: `e-${transaction.wallet_id}-${transaction.destination_id}-${index}`,
+            source: transaction.wallet_id,
+            target: transaction.destination_id,
             label: `${transaction.amount} SOL`,
+            animated: true,
           });
         });
 
-        const layout = new Layout(graph);
-
-        // Render the graph
-        if (paperRef.current) {
-          const renderer = new Renderer(paperRef.current, graph, 400, 300);
-          renderer.draw();
-        }
+        setNodes(newNodes);
+        setEdges(newEdges);
       } catch (error) {
         console.error("Failed to fetch transactions", error);
       }
@@ -54,17 +77,12 @@ function App() {
   }, []);
 
   return (
-    <div>
-      <h1>Transactions</h1>
-      {/* <ul>
-        {transactions.map((transaction, index) => (
-          <li key={index}>
-            {transaction.wallet_id} sent {transaction.amount} SOL to{" "}
-            {transaction.destination_id}
-          </li>
-        ))}
-      </ul> */}
-      <div ref={paperRef} style={{ width: "400px", height: "300px" }}></div>
+    <div style={{ width: "100vw", height: "100vh" }}>
+      <ReactFlow nodes={nodes} edges={edges}>
+        <MiniMap />
+        <Controls />
+        <Background />
+      </ReactFlow>
     </div>
   );
 }
