@@ -6,6 +6,8 @@ import ReactFlow, {
   Background,
   Node,
   Edge,
+  applyNodeChanges,
+  applyEdgeChanges,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import "./App.css";
@@ -76,9 +78,22 @@ function App() {
     fetchTransactions();
   }, []);
 
+  const handleNodeChange = (changes: any) => {
+    setNodes((nodes) => applyNodeChanges(changes, nodes));
+  };
+
+  const handleEdgeChange = (changes: any) => {
+    setEdges((edges) => applyEdgeChanges(changes, edges));
+  };
+
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
-      <ReactFlow nodes={nodes} edges={edges}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={handleNodeChange}
+        onEdgesChange={handleEdgeChange}
+      >
         <MiniMap />
         <Controls />
         <Background />
