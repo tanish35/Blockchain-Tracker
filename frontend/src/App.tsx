@@ -29,7 +29,7 @@ function App() {
         const { data } = await axios.post<Transaction[]>(
           "/api/wallet/transactions",
           {
-            walletId: "9gCSnoGWPfsrsmxKAwEPBzavpEaTdq2f7TJgtoHQGU9j",
+            walletId: "F9WFjLnXr4jrM4TfEmkKCdvvcT3iMxqvumHV9nPp74T2",
           }
         );
         setTransactions(data);

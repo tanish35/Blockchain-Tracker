@@ -36,6 +36,8 @@ const getWalletTransactions = asyncHandler(
         console.log("No transactions found.");
         return;
       }
+      // @ts-ignore
+      let transactions1 = [];
       const transactions = await Promise.all(
         signatures.map(async (signature) => {
           const transaction = await connection.getParsedTransaction(
@@ -45,9 +47,20 @@ const getWalletTransactions = asyncHandler(
               maxSupportedTransactionVersion: 0,
             }
           );
+          transactions1.push(transaction);
           const transactionDetails =
             // @ts-ignore
-            transaction.transaction.message.instructions[0]?.parsed?.info;
+            transaction.transaction.message.instructions[2]?.parsed?.info || transaction.transaction.message.instructions[0]?.parsed?.info
+          const transactionExists=await prisma.transaction.findUnique({
+            where: { transaction_id: signature.signature },
+          })
+          if(transactionExists){
+            return {
+              wallet_id: transactionDetails.source,
+              destination_id: transactionDetails.destination,
+              amount: transactionDetails.lamports / LAMPORTS_PER_SOL,
+            };
+          }
           await prisma.transaction.create({
             data: {
               transaction_id: signature.signature,
@@ -80,7 +93,7 @@ const recursiveDatabaseQuery = async (
   processedWallets: Set<string>,
   level: number
 ) => {
-  if (level > 8 || processedWallets.has(walletId)) return []; // Base case and prevention of duplicate processing
+  if (level > 12 || processedWallets.has(walletId)) return []; // Base case and prevention of duplicate processing
 
   processedWallets.add(walletId);
 
@@ -231,9 +244,23 @@ const latestTransaction = async (
 const deleteAllTransactions = asyncHandler(
   async (req: Request, res: Response) => {
     await prisma.transaction.deleteMany();
+    await prisma.wallet.deleteMany();
     res.json({ message: "All transactions deleted." });
   }
 );
+
+const deleteWallet = asyncHandler(async (req: Request, res: Response) => {
+  const { walletId } = req.body;
+  // await prisma.wallet.delete({
+  //   where: { wallet_id: walletId },
+  // });
+  await prisma.transaction.deleteMany({
+    where: {
+      OR: [{ wallet_id: walletId }, { destination_id: walletId }],
+    },
+  });
+  res.json({ message: "Wallet deleted successfully." });
+});
 
 export {
   getWallets,
@@ -241,4 +268,5 @@ export {
   updateMonitoring,
   getWalletTransactions,
   deleteAllTransactions,
+  deleteWallet,
 };

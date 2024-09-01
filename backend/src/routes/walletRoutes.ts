@@ -7,6 +7,7 @@ import {
   updateMonitoring,
   getWalletTransactions,
   deleteAllTransactions,
+  deleteWallet,
 } from "../controllers/walletController";
 
 const router = express.Router();
@@ -16,6 +17,7 @@ router.post("/add", addWallet);
 router.post("/monitor", updateMonitoring);
 router.post("/transactions", getWalletTransactions);
 router.get("/delete", deleteAllTransactions);
+router.post("/delete", deleteWallet);
 // router.get("/graph", drawGraph);
 
 export default router;

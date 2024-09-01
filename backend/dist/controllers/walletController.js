@@ -25,6 +25,7 @@ const getWallets = (0, express_async_handler_1.default)((req, res) => __awaiter(
 exports.getWallets = getWallets;
 const getWalletTransactions = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { walletId } = req.body;
+    // res.json({ message: "Fetching transactions..." });
     const walletExists = yield prisma_1.default.wallet.findUnique({
         where: { wallet_id: walletId },
     });
@@ -50,14 +51,15 @@ const getWalletTransactions = (0, express_async_handler_1.default)((req, res) =>
             const transactionDetails = 
             // @ts-ignore
             (_b = (_a = transaction.transaction.message.instructions[0]) === null || _a === void 0 ? void 0 : _a.parsed) === null || _b === void 0 ? void 0 : _b.info;
-            yield prisma_1.default.transaction.create({
-                data: {
-                    transaction_id: signature.signature,
-                    wallet_id: transactionDetails.source,
-                    destination_id: transactionDetails.destination,
-                    amount: transactionDetails.lamports / web3_js_1.LAMPORTS_PER_SOL,
-                },
-            });
+            res.json(transactionDetails);
+            // await prisma.transaction.create({
+            //   data: {
+            //     transaction_id: signature.signature,
+            //     wallet_id: transactionDetails.source,
+            //     destination_id: transactionDetails.destination,
+            //     amount: transactionDetails.lamports / LAMPORTS_PER_SOL,
+            //   },
+            // });
             return {
                 wallet_id: transactionDetails.source,
                 destination_id: transactionDetails.destination,
@@ -72,7 +74,7 @@ const getWalletTransactions = (0, express_async_handler_1.default)((req, res) =>
 }));
 exports.getWalletTransactions = getWalletTransactions;
 const recursiveDatabaseQuery = (walletId, processedWallets, level) => __awaiter(void 0, void 0, void 0, function* () {
-    if (level > 8 || processedWallets.has(walletId))
+    if (level > 12 || processedWallets.has(walletId))
         return []; // Base case and prevention of duplicate processing
     processedWallets.add(walletId);
     const transactions = yield prisma_1.default.transaction.findMany({
