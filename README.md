@@ -1,20 +1,24 @@
 # Solana Wallet Manager & Transaction Notifier
 
-This project is a TypeScript-based application that interacts with the Solana blockchain using the Solana Web3.js library. The application has several key functionalities, including wallet creation, SOL token airdrop, transaction tracking, and email notifications upon account changes. WebSockets are used to listen for real-time updates on the Solana blockchain.
+This project is a TypeScript-based application that interacts with the Solana blockchain using the Solana Web3.js library. It tracks transactions on the blockchain, creates transaction trails, and clusters them to identify the most connected wallets. The application features wallet creation, SOL token airdrop, transaction tracking, and email notifications for account activities. Additionally, it uses WebSockets for real-time updates and Python code to implement the Louvain algorithm for clustering transactions.
 
 ## Features
 
 - **Wallet Creation**: Generates a new Solana wallet and saves the keypair in a JSON file for future use.
 - **Airdrop SOL Tokens**: Airdrops 2 SOL to the newly created wallet on the Solana Devnet.
-- **Transaction Tracking**: Monitors any changes to the account using WebSockets and retrieves the latest transaction details.
-- **Email Notifications**: Sends an email notification with transaction details whenever a change is detected in the account.
+- **Transaction Tracking**: Monitors account changes using WebSockets and retrieves the latest transaction details.
+- **Email Notifications**: Sends email alerts with transaction details whenever a change is detected in the monitored accounts.
+- **Transaction Clustering**: Uses the Louvain algorithm to cluster transactions and identify the most connected wallets for monitoring.
 
 ## Technologies Used
 
 - **TypeScript**: Strongly typed programming language that builds on JavaScript.
 - **Solana Web3.js**: JavaScript SDK for interacting with the Solana blockchain.
+- **ReactFlow**: Library used to visualize blockchain transactions as graphs.
+- **Prisma**: ORM used to manage MongoDB.
 - **Nodemailer**: Node.js module for sending emails.
 - **WebSockets**: Provides real-time event-driven communication.
+- **Python**: Used for the Louvain algorithm in the clustering process.
 
 ## Setup Instructions
 
@@ -31,20 +35,31 @@ This project is a TypeScript-based application that interacts with the Solana bl
    npm install
    ```
 
-3. **Run the Application**
+3. **Run the Backend Server**
+
    ```bash
+   cd backend
    npm start
+   ```
+
+4. **Run the Frontend**
+
+   ```bash
+   cd frontend
+   npm run dev
    ```
 
 ## How It Works
 
-1. **Airdrop & Wallet Management**: The `airdrop.ts` script generates a keypair, saves it to a JSON file, and airdrops 2 SOL to the wallet on the Solana Devnet.
+1. **Airdrop & Wallet Management**: The `functions/airdrop.ts` script generates a keypair, saves it to a JSON file, and airdrops 2 SOL to the wallet on the Solana Devnet.
 
-2. **Transaction Tracking**: The `app.ts` script listens for changes to a specified account using WebSockets. When a change is detected, it fetches the latest transaction details and sends an email notification with the information.
+2. **Transaction Tracking**: The `functions/app.ts` script listens for changes to specified accounts using WebSockets. When a change is detected, it fetches the latest transaction details and sends an email notification.
 
-3. **Email Notifications**: The Nodemailer library is used to send emails with transaction details, making sure you stay updated on all account activities.
+3. **Transaction Clustering**: The `clusters` folder contains Python code implementing the Louvain algorithm. It clusters transactions to identify the most connected wallets.
 
-4. **Make Transaction**: The `transaction.ts` script makes a transaction of 0.01 SOL to your desired wallet
+4. **Wallet Monitoring**: Wallets identified in the most connected cluster are monitored using WebSockets, with email alerts sent for any new transactions.
+
+5. **Make Transaction**: The `functions/transaction.ts` script makes a transaction of 0.01 SOL to a specified wallet.
 
 ## Contribution
 
