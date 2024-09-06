@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteAllTransactions = exports.getWalletTransactions = exports.updateMonitoring = exports.addWallet = exports.getWallets = void 0;
+exports.deleteWallet = exports.deleteAllTransactions = exports.getWalletTransactions = exports.updateMonitoring = exports.addWallet = exports.getWallets = void 0;
 const express_async_handler_1 = __importDefault(require("express-async-handler"));
 const prisma_1 = __importDefault(require("../lib/prisma"));
 const sendMail_1 = __importDefault(require("../mail/sendMail"));
@@ -25,7 +25,6 @@ const getWallets = (0, express_async_handler_1.default)((req, res) => __awaiter(
 exports.getWallets = getWallets;
 const getWalletTransactions = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { walletId } = req.body;
-    // res.json({ message: "Fetching transactions..." });
     const walletExists = yield prisma_1.default.wallet.findUnique({
         where: { wallet_id: walletId },
     });
@@ -42,31 +41,45 @@ const getWalletTransactions = (0, express_async_handler_1.default)((req, res) =>
             console.log("No transactions found.");
             return;
         }
+        // @ts-ignore
+        let transactions1 = [];
         const transactions = yield Promise.all(signatures.map((signature) => __awaiter(void 0, void 0, void 0, function* () {
-            var _a, _b;
+            var _a, _b, _c, _d;
             const transaction = yield connection.getParsedTransaction(signature.signature, {
                 commitment: "confirmed",
                 maxSupportedTransactionVersion: 0,
             });
+            transactions1.push(transaction);
             const transactionDetails = 
             // @ts-ignore
-            (_b = (_a = transaction.transaction.message.instructions[0]) === null || _a === void 0 ? void 0 : _a.parsed) === null || _b === void 0 ? void 0 : _b.info;
-            res.json(transactionDetails);
-            // await prisma.transaction.create({
-            //   data: {
-            //     transaction_id: signature.signature,
-            //     wallet_id: transactionDetails.source,
-            //     destination_id: transactionDetails.destination,
-            //     amount: transactionDetails.lamports / LAMPORTS_PER_SOL,
-            //   },
-            // });
+            ((_b = (_a = transaction.transaction.message.instructions[2]) === null || _a === void 0 ? void 0 : _a.parsed) === null || _b === void 0 ? void 0 : _b.info) || ((_d = (_c = transaction.transaction.message.instructions[0]) === null || _c === void 0 ? void 0 : _c.parsed) === null || _d === void 0 ? void 0 : _d.info);
+            const transactionExists = yield prisma_1.default.transaction.findUnique({
+                where: { transaction_id: signature.signature },
+            });
+            if (transactionExists) {
+                return {
+                    wallet_id: transactionDetails.source,
+                    destination_id: transactionDetails.destination,
+                    amount: transactionDetails.lamports / web3_js_1.LAMPORTS_PER_SOL,
+                };
+            }
+            yield prisma_1.default.transaction.create({
+                data: {
+                    transaction_id: signature.signature,
+                    wallet_id: transactionDetails.source,
+                    destination_id: transactionDetails.destination,
+                    amount: transactionDetails.lamports / web3_js_1.LAMPORTS_PER_SOL,
+                },
+            });
             return {
                 wallet_id: transactionDetails.source,
                 destination_id: transactionDetails.destination,
                 amount: transactionDetails.lamports / web3_js_1.LAMPORTS_PER_SOL,
             };
         })));
+        console.log(transactions);
         res.json(transactions);
+        return;
     }
     const processedWallets = new Set();
     const transactions = yield recursiveDatabaseQuery(walletId, processedWallets, 0);
@@ -196,6 +209,20 @@ const latestTransaction = (connection, publicKey) => __awaiter(void 0, void 0, v
 });
 const deleteAllTransactions = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield prisma_1.default.transaction.deleteMany();
+    yield prisma_1.default.wallet.deleteMany();
     res.json({ message: "All transactions deleted." });
 }));
 exports.deleteAllTransactions = deleteAllTransactions;
+const deleteWallet = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { walletId } = req.body;
+    yield prisma_1.default.transaction.deleteMany({
+        where: {
+            OR: [{ wallet_id: walletId }, { destination_id: walletId }],
+        },
+    });
+    yield prisma_1.default.wallet.delete({
+        where: { wallet_id: walletId },
+    });
+    res.json({ message: "Wallet deleted successfully." });
+}));
+exports.deleteWallet = deleteWallet;

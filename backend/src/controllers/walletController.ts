@@ -76,7 +76,9 @@ const getWalletTransactions = asyncHandler(
           };
         })
       );
+      console.log(transactions);
       res.json(transactions);
+      return;
     }
     const processedWallets = new Set<string>();
     const transactions = await recursiveDatabaseQuery(
@@ -251,13 +253,13 @@ const deleteAllTransactions = asyncHandler(
 
 const deleteWallet = asyncHandler(async (req: Request, res: Response) => {
   const { walletId } = req.body;
-  // await prisma.wallet.delete({
-  //   where: { wallet_id: walletId },
-  // });
   await prisma.transaction.deleteMany({
     where: {
       OR: [{ wallet_id: walletId }, { destination_id: walletId }],
     },
+  });
+  await prisma.wallet.delete({
+    where: { wallet_id: walletId },
   });
   res.json({ message: "Wallet deleted successfully." });
 });

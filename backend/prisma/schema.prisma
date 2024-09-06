@@ -15,7 +15,7 @@ datasource db {
 
 model Transaction {
   id             String   @id @default(cuid()) @map("_id")
-  transaction_id String   
+  transaction_id String   @unique
   wallet_id      String
   destination_id String
   amount         Float
