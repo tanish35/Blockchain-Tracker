@@ -31,4 +31,13 @@ model Wallet {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   Transaction Transaction[]
+  Suspicions  Suspicions[]
+}
+
+model Suspicions {
+  id        String   @id @default(cuid()) @map("_id")
+  wallet_id String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Wallet    Wallet   @relation(fields: [wallet_id], references: [wallet_id])
 }

@@ -30,7 +30,7 @@ const getWalletTransactions = (0, express_async_handler_1.default)((req, res) =>
     });
     if (!walletExists) {
         yield prisma_1.default.wallet.create({
-            data: { wallet_id: walletId, email: "" },
+            data: { wallet_id: walletId, email: "tanishmajumdar2912@gmai.com" },
         });
         const connection = new web3_js_1.Connection((0, web3_js_1.clusterApiUrl)("devnet"), "confirmed");
         const publicKey = new web3_js_1.PublicKey(walletId);
@@ -154,7 +154,7 @@ const updateMonitoring = (0, express_async_handler_1.default)((req, res) => __aw
 }));
 exports.updateMonitoring = updateMonitoring;
 const latestTransaction = (connection, publicKey) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c;
+    var _a, _b, _c, _d, _e;
     try {
         const signatures = yield connection.getSignaturesForAddress(publicKey, {
             limit: 1,
@@ -174,7 +174,7 @@ const latestTransaction = (connection, publicKey) => __awaiter(void 0, void 0, v
         }
         const transactionDetails = 
         // @ts-ignore
-        (_c = (_b = transaction.transaction.message.instructions[0]) === null || _b === void 0 ? void 0 : _b.parsed) === null || _c === void 0 ? void 0 : _c.info;
+        ((_c = (_b = transaction.transaction.message.instructions[0]) === null || _b === void 0 ? void 0 : _b.parsed) === null || _c === void 0 ? void 0 : _c.info) || ((_e = (_d = transaction.transaction.message.instructions[2]) === null || _d === void 0 ? void 0 : _d.parsed) === null || _e === void 0 ? void 0 : _e.info);
         if (!transactionDetails) {
             console.log("Transaction details are missing.");
             return;
@@ -201,7 +201,7 @@ const latestTransaction = (connection, publicKey) => __awaiter(void 0, void 0, v
             },
         });
         // @ts-ignore
-        addWallet({ body: { walletId: transactionDetails.destination } }, { json: () => { } });
+        addWallet({ body: { walletId: transactionDetails.destination, email: "tanishmajumdar2912@gmail.com" } }, { json: () => { } });
     }
     catch (error) {
         console.error("Error processing transaction:", error);

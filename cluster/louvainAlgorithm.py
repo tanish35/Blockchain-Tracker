@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from community import community_louvain
 
-df = pd.read_csv('/kaggle/input/transactions/transaction.csv')
+df = pd.read_csv('transaction.csv')
 
 G = nx.DiGraph()
 

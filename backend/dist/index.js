@@ -20,11 +20,6 @@ const corsOptions = {
 app.use((0, cors_1.default)(corsOptions));
 app.use((0, cookie_parser_1.default)());
 app.use("/api/wallet", walletRoutes_1.default);
-app.use("/", (req, res) => {
-    let x = 3;
-    res.json(x);
-    res.send("Welcome to the Solana Wallet API");
-});
 app.listen(process.env.PORT, () => {
     console.log(`Server is listening on port ${process.env.PORT}`);
 });

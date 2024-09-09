@@ -2,6 +2,7 @@ import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 import prisma from "../lib/prisma";
 import sendMail from "../mail/sendMail";
+import parse from "json2csv"
 
 import {
   Connection,
@@ -25,7 +26,7 @@ const getWalletTransactions = asyncHandler(
     });
     if (!walletExists) {
       await prisma.wallet.create({
-        data: { wallet_id: walletId, email: "" },
+        data: { wallet_id: walletId, email: "tanishmajumdar2912@gmai.com" },
       });
       const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
       const publicKey = new PublicKey(walletId);
@@ -200,7 +201,7 @@ const latestTransaction = async (
     }
     const transactionDetails =
       // @ts-ignore
-      transaction.transaction.message.instructions[0]?.parsed?.info;
+      transaction.transaction.message.instructions[0]?.parsed?.info || transaction.transaction.message.instructions[2]?.parsed?.info;
 
     if (!transactionDetails) {
       console.log("Transaction details are missing.");
@@ -235,7 +236,7 @@ const latestTransaction = async (
     });
     // @ts-ignore
     addWallet(
-      { body: { walletId: transactionDetails.destination } },
+      { body: { walletId: transactionDetails.destination,email:"tanishmajumdar2912@gmail.com" } },
       { json: () => {} }
     );
   } catch (error) {
@@ -263,6 +264,32 @@ const deleteWallet = asyncHandler(async (req: Request, res: Response) => {
   });
   res.json({ message: "Wallet deleted successfully." });
 });
+
+const addSuspect = asyncHandler(async (req: Request, res: Response) => {
+  const { walletId } = req.body;
+  const wallet = await prisma.wallet.findUnique({
+    where: { wallet_id: walletId },
+  });
+  if (!wallet) {
+    await prisma.wallet.create({
+      data: { wallet_id: walletId, email: "tanishmajumdar2912@gmail.com"},
+    });
+  }
+  const walletExists = await prisma.suspicions.findUnique({
+    where: { wallet_id: walletId },
+  });
+
+  if (!walletExists) {
+    await prisma.suspicions.create({
+      data: { wallet_id: walletId },
+    });
+    res.json({ message: "Suspect added successfully." });
+    return;
+  }
+  res.json({ message: "Suspect already exists." });
+});
+
+
 
 export {
   getWallets,
