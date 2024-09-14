@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Fix: Move the `server` object inside the main config object
 export default defineConfig({
   plugins: [react()],
   server: {
