@@ -14,7 +14,7 @@ const router = express.Router();
 
 router.get("/", getWallets);
 router.post("/add", addWallet);
-router.post("/monitor", updateMonitoring);
+router.get("/monitor", updateMonitoring);
 router.post("/transactions", getWalletTransactions);
 router.get("/delete", deleteAllTransactions);
 router.post("/delete", deleteWallet);

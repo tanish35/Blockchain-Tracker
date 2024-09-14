@@ -226,3 +226,25 @@ const deleteWallet = (0, express_async_handler_1.default)((req, res) => __awaite
     res.json({ message: "Wallet deleted successfully." });
 }));
 exports.deleteWallet = deleteWallet;
+const addSuspect = (0, express_async_handler_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { walletId } = req.body;
+    const wallet = yield prisma_1.default.wallet.findUnique({
+        where: { wallet_id: walletId },
+    });
+    if (!wallet) {
+        yield prisma_1.default.wallet.create({
+            data: { wallet_id: walletId, email: "tanishmajumdar2912@gmail.com" },
+        });
+    }
+    const walletExists = yield prisma_1.default.suspicions.findUnique({
+        where: { wallet_id: walletId },
+    });
+    if (!walletExists) {
+        yield prisma_1.default.suspicions.create({
+            data: { wallet_id: walletId },
+        });
+        res.json({ message: "Suspect added successfully." });
+        return;
+    }
+    res.json({ message: "Suspect already exists." });
+}));

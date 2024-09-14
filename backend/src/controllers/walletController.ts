@@ -245,7 +245,7 @@ const latestTransaction = async (
 };
 
 const deleteAllTransactions = asyncHandler(
-  async (req: Request, res: Response) => {
+  async (req:Request,res:Response) => {
     await prisma.transaction.deleteMany();
     await prisma.wallet.deleteMany();
     res.json({ message: "All transactions deleted." });

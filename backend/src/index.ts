@@ -7,6 +7,8 @@ import walletRoutes from "./routes/walletRoutes";
 const app = express();
 app.use(express.json());
 
+const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
+
 const corsOptions = {
   origin: [
     "http://localhost:3001",
@@ -20,7 +22,10 @@ app.use(cookieParser());
 
 app.use("/api/wallet", walletRoutes);
 
-app.listen(process.env.PORT, () => {
-  console.log(`Server is listening on port ${process.env.PORT}`);
+app.get("/", (req, res) => {
+  res.send("Server is running");
 });
 
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running at http://0.0.0.0:${port}`);
+});
