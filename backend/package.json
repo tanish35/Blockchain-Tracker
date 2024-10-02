@@ -12,7 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^5.18.0",
+    "@prisma/client": "^5.20.0",
     "@solana/web3.js": "^1.95.3",
     "@types/cookie-parser": "^1.4.7",
     "@types/cors": "^2.8.17",
@@ -28,10 +28,10 @@
     "json2csv": "^6.0.0-alpha.2",
     "nodemailer": "^6.9.14",
     "nodemon": "^3.1.4",
-    "prisma": "^5.18.0",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
+    "prisma": "^5.20.0",
     "typescript": "^5.5.4"
   }
 }
