@@ -8,6 +8,7 @@ import ReactFlow, {
   Edge,
   applyNodeChanges,
   applyEdgeChanges,
+  useReactFlow,
 } from "reactflow";
 import "reactflow/dist/style.css";
 import "./App.css";
@@ -22,8 +23,8 @@ function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
-
-  useEffect(() => {
+  
+ useEffect(() => {
     const fetchTransactions = async () => {
       try {
         const { data } = await axios.post<Transaction[]>(
@@ -37,27 +38,33 @@ function App() {
         const newNodes: Node[] = [];
         const newEdges: Edge[] = [];
 
+        const centerX = 500; // Center X position
+        const centerY = 400; // Center Y position
+        const radius = 350; // Radius of the circle
+        const angleStep = (2 * Math.PI) / 5  // Angle step for each node
+
         data.forEach((transaction, index) => {
+          const angle = index * angleStep;
+          const xPos = centerX + radius * Math.cos(angle);
+          const yPos = centerY + radius * Math.sin(angle);
+
           if (!nodesSet.has(transaction.wallet_id)) {
             nodesSet.add(transaction.wallet_id);
             newNodes.push({
               id: transaction.wallet_id,
-              data: { label: transaction.wallet_id },
-              position: {
-                x: Math.random() * window.innerWidth,
-                y: Math.random() * window.innerHeight,
-              },
+              data: { label: transaction.wallet_id.length > 10 ? `${transaction.wallet_id.slice(0, 10)}...` : transaction.wallet_id },
+              position: { x: xPos, y: yPos },
+              style: { backgroundColor: "#ed043a", color: "#000", width: 150, height: 60, fontSize: 16 }, // Increased node size
             });
           }
+
           if (!nodesSet.has(transaction.destination_id)) {
             nodesSet.add(transaction.destination_id);
             newNodes.push({
               id: transaction.destination_id,
-              data: { label: transaction.destination_id },
-              position: {
-                x: Math.random() * window.innerWidth,
-                y: Math.random() * window.innerHeight,
-              },
+              data: { label: transaction.destination_id.length > 10 ? `${transaction.destination_id.slice(0, 10)}...` : transaction.destination_id },
+              position: { x: xPos, y: yPos },
+              style: { backgroundColor: "#00af11", color: "#fff", width: 150, height: 60, fontSize: 16 },
             });
           }
           newEdges.push({
@@ -66,6 +73,8 @@ function App() {
             target: transaction.destination_id,
             label: `${transaction.amount} SOL`,
             animated: true,
+            style: { stroke: '#72c2f7' },
+            labelStyle: { fontSize: 16, fontWeight: 'bold' }, // Increase font size and make it bold
           });
         });
 
@@ -77,6 +86,8 @@ function App() {
     };
     fetchTransactions();
   }, []);
+
+
 
   const handleNodeChange = (changes: any) => {
     setNodes((nodes) => applyNodeChanges(changes, nodes));
