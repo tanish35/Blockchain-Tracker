@@ -64,7 +64,9 @@ This project is a TypeScript-based application that interacts with the Solana bl
 
 ## Star History
 
-<iframe style="width:100%;height:auto;min-width:600px;min-height:400px;" src="https://www.star-history.com/embed?secret=Z2l0aHViX3BhdF8xMUJCNTVIN0EwZXVFTlpXVzI1aWVPX0NZdVdua2NiOU1nSmlZOWF6cDZ6VHkyR2NrWjg5NU9lTjJhaE9hN2ZSdjFZN1JGNDdSTDdSVmppcGlv#tanish35/Blockchain-Tracker&Date" frameBorder="0"></iframe>
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=tanish35/Blockchain-Tracker&type=Date)](https://www.star-history.com/#tanish35/Blockchain-Tracker&Date)
 
 ## Contribution
 
