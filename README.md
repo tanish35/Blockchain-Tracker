@@ -61,6 +61,11 @@ This project is a TypeScript-based application that interacts with the Solana bl
 
 5. **Make Transaction**: The `functions/transaction.ts` script makes a transaction of 0.01 SOL to a specified wallet.
 
+
+## Star History
+
+<iframe style="width:100%;height:auto;min-width:600px;min-height:400px;" src="https://www.star-history.com/embed?secret=Z2l0aHViX3BhdF8xMUJCNTVIN0EwZXVFTlpXVzI1aWVPX0NZdVdua2NiOU1nSmlZOWF6cDZ6VHkyR2NrWjg5NU9lTjJhaE9hN2ZSdjFZN1JGNDdSTDdSVmppcGlv#tanish35/Blockchain-Tracker&Date" frameBorder="0"></iframe>
+
 ## Contribution
 
 Feel free to fork the repository and submit pull requests. Contributions, whether bug fixes, features, or documentation improvements, are welcome!
