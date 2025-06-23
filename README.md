@@ -1,5 +1,7 @@
 # Solana Wallet Manager & Transaction Notifier
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/tanish35/Blockchain-Tracker)
+
 This project is a TypeScript-based application that interacts with the Solana blockchain using the Solana Web3.js library. It tracks transactions on the blockchain, creates transaction trails, and clusters them to identify the most connected wallets. The application features wallet creation, SOL token airdrop, transaction tracking, and email notifications for account activities. Additionally, it uses WebSockets for real-time updates and Python code to implement the Louvain algorithm for clustering transactions.
 
 ## Features
